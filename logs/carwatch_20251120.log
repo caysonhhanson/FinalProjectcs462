@@ -1,0 +1,57 @@
+2025-11-20 22:49:11 - scraper_manager - INFO - ScraperManager initialized
+2025-11-20 22:49:11 - scraper_manager - INFO - ============================================================
+2025-11-20 22:49:11 - scraper_manager - INFO - Starting scrape job at 2025-11-20 22:49:11.650753
+2025-11-20 22:49:11 - scraper_manager - INFO - ============================================================
+2025-11-20 22:49:17 - scraper_manager - INFO - Scraped 484 total listings
+2025-11-20 22:49:17 - scraper_manager - INFO - ============================================================
+2025-11-20 22:49:17 - scraper_manager - INFO - Scrape Complete!
+2025-11-20 22:49:17 - scraper_manager - INFO -   Duration: 6.3 seconds
+2025-11-20 22:49:17 - scraper_manager - INFO -   New listings: 0
+2025-11-20 22:49:17 - scraper_manager - INFO -   Updated listings: 484
+2025-11-20 22:49:17 - scraper_manager - INFO -   Price increases: 0
+2025-11-20 22:49:17 - scraper_manager - INFO -   Price decreases: 0
+2025-11-20 22:49:17 - scraper_manager - INFO - ============================================================
+2025-11-20 22:49:17 - scraper_manager - INFO - 
+============================================================
+2025-11-20 22:49:17 - scraper_manager - INFO - Database Statistics
+2025-11-20 22:49:17 - scraper_manager - INFO - ============================================================
+2025-11-20 22:49:17 - scraper_manager - INFO -   Total listings: 242
+2025-11-20 22:49:17 - scraper_manager - INFO -   Active listings: 242
+2025-11-20 22:49:17 - scraper_manager - INFO -   Inactive listings: 0
+2025-11-20 22:49:17 - scraper_manager - INFO -   Price history records: 242
+2025-11-20 22:49:17 - scraper_manager - INFO -   Listings with price changes: 0
+2025-11-20 22:49:17 - scraper_manager - INFO - ============================================================
+
+2025-11-20 22:49:17 - scraper_manager - INFO - Database connection closed
+2025-11-20 22:52:14 - scheduler - INFO - 🧪 TEST MODE: Scheduler will run every minute
+2025-11-20 22:52:14 - scheduler - INFO - 🚀 Running initial scrape now...
+2025-11-20 22:52:14 - scheduler - INFO - **********************************************************************
+2025-11-20 22:52:14 - scheduler - INFO - SCHEDULED JOB TRIGGERED - 2025-11-20 22:52:14.296995
+2025-11-20 22:52:14 - scheduler - INFO - **********************************************************************
+2025-11-20 22:52:14 - scraper_manager - INFO - ScraperManager initialized
+2025-11-20 22:52:14 - scraper_manager - INFO - ============================================================
+2025-11-20 22:52:14 - scraper_manager - INFO - Starting scrape job at 2025-11-20 22:52:14.326005
+2025-11-20 22:52:14 - scraper_manager - INFO - ============================================================
+2025-11-20 22:52:20 - scraper_manager - INFO - Scraped 484 total listings
+2025-11-20 22:52:20 - scraper_manager - INFO - ============================================================
+2025-11-20 22:52:20 - scraper_manager - INFO - Scrape Complete!
+2025-11-20 22:52:20 - scraper_manager - INFO -   Duration: 6.4 seconds
+2025-11-20 22:52:20 - scraper_manager - INFO -   New listings: 0
+2025-11-20 22:52:20 - scraper_manager - INFO -   Updated listings: 484
+2025-11-20 22:52:20 - scraper_manager - INFO -   Price increases: 0
+2025-11-20 22:52:20 - scraper_manager - INFO -   Price decreases: 0
+2025-11-20 22:52:20 - scraper_manager - INFO - ============================================================
+2025-11-20 22:52:20 - scraper_manager - INFO - 
+============================================================
+2025-11-20 22:52:20 - scraper_manager - INFO - Database Statistics
+2025-11-20 22:52:20 - scraper_manager - INFO - ============================================================
+2025-11-20 22:52:20 - scraper_manager - INFO -   Total listings: 242
+2025-11-20 22:52:20 - scraper_manager - INFO -   Active listings: 242
+2025-11-20 22:52:20 - scraper_manager - INFO -   Inactive listings: 0
+2025-11-20 22:52:20 - scraper_manager - INFO -   Price history records: 242
+2025-11-20 22:52:20 - scraper_manager - INFO -   Listings with price changes: 0
+2025-11-20 22:52:20 - scraper_manager - INFO - ============================================================
+
+2025-11-20 22:52:20 - scraper_manager - INFO - Database connection closed
+2025-11-20 22:52:20 - scheduler - INFO - ⏰ Scheduler started. Press Ctrl+C to exit.
+2025-11-20 22:53:10 - scheduler - INFO - Scheduler stopped by user
