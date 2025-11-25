@@ -10,7 +10,8 @@
 | 11/20/2025 | Added logging system, improved price tracking | 1.5 |
 | 11/20/2025 | Built scheduler with APScheduler, tested daily runs | 1.5 |
 | 11/20/2025 | Added inactive listing detection, better error handling | 1.0 |
-| **Total** | | **13.0** |
+| 11/25/2025 | Built Flask web interface, templates, API endpoints |5.0 |
+| **Total** | | **18.0** |
 
 ## Accomplishments
 

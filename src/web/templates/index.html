@@ -1,0 +1,334 @@
+{% extends "base.html" %}
+
+{% block title %}CarWatch - Search Used Cars{% endblock %}
+
+{% block extra_css %}
+<style>
+    .search-section {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .search-title {
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+        color: #333;
+    }
+    
+    .filters {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .filter-group label {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #555;
+    }
+    
+    .filter-group input,
+    .filter-group select {
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 1rem;
+    }
+    
+    .listing-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .listing-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .listing-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+    }
+    
+    .listing-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+    
+    .listing-price {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    .listing-details {
+        display: flex;
+        gap: 1.5rem;
+        color: #666;
+        margin-bottom: 1rem;
+    }
+    
+    .listing-detail-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .listing-location {
+        color: #888;
+        font-size: 0.9rem;
+    }
+    
+    .listing-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .results-count {
+        font-size: 1.2rem;
+        color: #666;
+    }
+    
+    .sort-options {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+    }
+    
+    .pagination button {
+        padding: 0.5rem 1rem;
+        border: 1px solid #ddd;
+        background: white;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+    
+    .pagination button:hover:not(:disabled) {
+        background: #f0f0f0;
+    }
+    
+    .pagination button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .pagination button.active {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-section">
+    <h1 class="search-title">Find Your Next Car</h1>
+    
+    <div class="filters">
+        <div class="filter-group">
+            <label for="search">Search</label>
+            <input type="text" id="search" placeholder="Make, model, or keyword...">
+        </div>
+        
+        <div class="filter-group">
+            <label for="min-year">Min Year</label>
+            <input type="number" id="min-year" placeholder="e.g., 2015">
+        </div>
+        
+        <div class="filter-group">
+            <label for="max-year">Max Year</label>
+            <input type="number" id="max-year" placeholder="e.g., 2024">
+        </div>
+        
+        <div class="filter-group">
+            <label for="max-price">Max Price</label>
+            <input type="number" id="max-price" placeholder="e.g., 25000">
+        </div>
+        
+        <div class="filter-group">
+            <label for="max-mileage">Max Mileage</label>
+            <input type="number" id="max-mileage" placeholder="e.g., 100000">
+        </div>
+    </div>
+    
+    <button class="btn" onclick="searchListings()">Search</button>
+    <button class="btn btn-secondary" onclick="clearFilters()">Clear Filters</button>
+</div>
+
+<div class="results-header">
+    <div class="results-count" id="results-count">Loading...</div>
+    <div class="sort-options">
+        <label>Sort by:</label>
+        <select id="sort-by" onchange="searchListings()">
+            <option value="updated_at">Recently Updated</option>
+            <option value="price">Price</option>
+            <option value="year">Year</option>
+            <option value="mileage">Mileage</option>
+        </select>
+        <select id="sort-order" onchange="searchListings()">
+            <option value="DESC">High to Low</option>
+            <option value="ASC">Low to High</option>
+        </select>
+    </div>
+</div>
+
+<div id="listings-container">
+    <div class="spinner"></div>
+</div>
+
+<div class="pagination" id="pagination"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentPage = 1;
+let totalPages = 1;
+
+function searchListings(page = 1) {
+    currentPage = page;
+    
+    // Get filter values
+    const params = new URLSearchParams({
+        page: page,
+        per_page: 20,
+        sort_by: document.getElementById('sort-by').value,
+        sort_order: document.getElementById('sort-order').value
+    });
+    
+    const search = document.getElementById('search').value;
+    if (search) params.append('search', search);
+    
+    const minYear = document.getElementById('min-year').value;
+    if (minYear) params.append('min_year', minYear);
+    
+    const maxYear = document.getElementById('max-year').value;
+    if (maxYear) params.append('max_year', maxYear);
+    
+    const maxPrice = document.getElementById('max-price').value;
+    if (maxPrice) params.append('max_price', maxPrice);
+    
+    const maxMileage = document.getElementById('max-mileage').value;
+    if (maxMileage) params.append('max_mileage', maxMileage);
+    
+    // Show loading
+    document.getElementById('listings-container').innerHTML = '<div class="spinner"></div>';
+    
+    // Fetch listings
+    fetch(`/api/listings?${params}`)
+        .then(response => response.json())
+        .then(data => {
+            displayListings(data.listings);
+            displayPagination(data.page, data.total_pages, data.total);
+            document.getElementById('results-count').textContent = 
+                `${data.total} cars found`;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('listings-container').innerHTML = 
+                '<p style="text-align:center; color: red;">Error loading listings</p>';
+        });
+}
+
+function displayListings(listings) {
+    const container = document.getElementById('listings-container');
+    
+    if (listings.length === 0) {
+        container.innerHTML = '<p style="text-align:center; padding: 2rem;">No listings found. Try adjusting your filters.</p>';
+        return;
+    }
+    
+    container.innerHTML = listings.map(listing => `
+        <div class="listing-card">
+            <div class="listing-header">
+                <div>
+                    <div class="listing-title">${listing.title}</div>
+                    <div class="listing-details">
+                        ${listing.year ? `<div class="listing-detail-item">📅 ${listing.year}</div>` : ''}
+                        ${listing.make ? `<div class="listing-detail-item">🏭 ${listing.make}</div>` : ''}
+                        ${listing.model ? `<div class="listing-detail-item">🚗 ${listing.model}</div>` : ''}
+                        ${listing.mileage ? `<div class="listing-detail-item">🛣️ ${listing.mileage.toLocaleString()} mi</div>` : ''}
+                    </div>
+                    ${listing.location ? `<div class="listing-location">📍 ${listing.location}</div>` : ''}
+                </div>
+                <div class="listing-price">
+                    ${listing.price ? '$' + listing.price.toLocaleString() : 'Price N/A'}
+                </div>
+            </div>
+            <div class="listing-actions">
+                <a href="/listing/${listing.id}" class="btn">View Details</a>
+                <a href="${listing.url}" target="_blank" class="btn btn-secondary">View on Craigslist</a>
+            </div>
+        </div>
+    `).join('');
+}
+
+function displayPagination(page, total, totalCount) {
+    totalPages = total;
+    const container = document.getElementById('pagination');
+    
+    if (total <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+    
+    let html = '';
+    
+    // Previous button
+    html += `<button onclick="searchListings(${page - 1})" ${page === 1 ? 'disabled' : ''}>← Previous</button>`;
+    
+    // Page numbers
+    for (let i = Math.max(1, page - 2); i <= Math.min(total, page + 2); i++) {
+        html += `<button onclick="searchListings(${i})" class="${i === page ? 'active' : ''}">${i}</button>`;
+    }
+    
+    // Next button
+    html += `<button onclick="searchListings(${page + 1})" ${page === total ? 'disabled' : ''}>Next →</button>`;
+    
+    container.innerHTML = html;
+}
+
+function clearFilters() {
+    document.getElementById('search').value = '';
+    document.getElementById('min-year').value = '';
+    document.getElementById('max-year').value = '';
+    document.getElementById('max-price').value = '';
+    document.getElementById('max-mileage').value = '';
+    searchListings(1);
+}
+
+// Load initial listings
+searchListings(1);
+</script>
+{% endblock %}
