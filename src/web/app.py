@@ -224,5 +224,84 @@ def stats_page():
     """Statistics page"""
     return render_template('stats.html')
 
+@app.route('/alerts')
+def alerts_page():
+    """Alerts management page"""
+    return render_template('alerts.html')
+
+@app.route('/api/alerts', methods=['GET', 'POST'])
+def manage_alerts():
+    """Create new alert or get user's alerts"""
+    db = get_db()
+    
+    if request.method == 'POST':
+        # Create new alert
+        data = request.json
+        
+        # Validate required fields
+        if not data.get('email') or not data.get('max_price'):
+            return jsonify({'error': 'Email and max_price are required'}), 400
+        
+        query = """
+            INSERT INTO alerts (
+                email, make, model, min_year, max_year, max_price, max_mileage
+            ) VALUES (
+                %(email)s, %(make)s, %(model)s, %(min_year)s, 
+                %(max_year)s, %(max_price)s, %(max_mileage)s
+            )
+            RETURNING id;
+        """
+        
+        try:
+            result = db.execute_query(query, data, fetch=True)
+            db.close()
+            return jsonify({'id': result[0]['id'], 'message': 'Alert created'}), 201
+        except Exception as e:
+            db.close()
+            return jsonify({'error': str(e)}), 500
+    
+    else:
+        # Get alerts for email
+        email = request.args.get('email')
+        if not email:
+            return jsonify({'error': 'Email parameter required'}), 400
+        
+        query = """
+            SELECT * FROM alerts 
+            WHERE email = %s 
+            ORDER BY created_at DESC
+        """
+        alerts = db.execute_query(query, (email,), fetch=True)
+        
+        # Convert datetime objects
+        for alert in alerts:
+            if alert.get('created_at'):
+                alert['created_at'] = alert['created_at'].isoformat()
+        
+        db.close()
+        return jsonify({'alerts': alerts})
+
+@app.route('/api/alerts/<int:alert_id>', methods=['PATCH', 'DELETE'])
+def update_alert(alert_id):
+    """Update or delete an alert"""
+    db = get_db()
+    
+    if request.method == 'PATCH':
+        # Update alert (toggle active status)
+        data = request.json
+        is_active = data.get('is_active')
+        
+        query = "UPDATE alerts SET is_active = %s WHERE id = %s"
+        db.execute_query(query, (is_active, alert_id))
+        db.close()
+        return jsonify({'message': 'Alert updated'})
+    
+    elif request.method == 'DELETE':
+        # Delete alert
+        query = "DELETE FROM alerts WHERE id = %s"
+        db.execute_query(query, (alert_id,))
+        db.close()
+        return jsonify({'message': 'Alert deleted'})
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

@@ -13,7 +13,8 @@
 | 11/25/2025 | Built Flask web interface, templates, API endpoints |5.0 |
 | 11/25/2025 | Built listing detail page with Chart.js price history | 3.0 |
 | 11/25/2025 | Built stats dashboard with Chart.js visualizations | 2.5 |
-| **Total** | | **23.5** |
+| 11/25/2025 | Built alert system with email notifications | 7.5 |
+| **Total** | | **31** |
 
 ## Accomplishments
 

@@ -1,0 +1,448 @@
+{% extends "base.html" %}
+
+{% block title %}Price Alerts - CarWatch{% endblock %}
+
+{% block extra_css %}
+<style>
+    .alerts-container {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    @media (max-width: 968px) {
+        .alerts-container {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .create-alert-section {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .my-alerts-section {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .section-title {
+        font-size: 1.8rem;
+        margin-bottom: 1.5rem;
+        color: #333;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 0.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #555;
+    }
+    
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 1rem;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .form-help {
+        font-size: 0.85rem;
+        color: #888;
+        margin-top: 0.25rem;
+    }
+    
+    .alert-card {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        border-left: 4px solid #667eea;
+    }
+    
+    .alert-card.inactive {
+        opacity: 0.6;
+        border-left-color: #ccc;
+    }
+    
+    .alert-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+    }
+    
+    .alert-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .alert-status {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    .alert-status.active {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .alert-status.inactive {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .alert-criteria {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    
+    .alert-criterion {
+        font-size: 0.9rem;
+        color: #666;
+    }
+    
+    .alert-criterion strong {
+        color: #333;
+    }
+    
+    .alert-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .btn-small {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .btn-danger {
+        background: #dc3545;
+    }
+    
+    .btn-danger:hover {
+        background: #c82333;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #666;
+    }
+    
+    .empty-state-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+    
+    .success-message {
+        background: #d4edda;
+        color: #155724;
+        padding: 1rem;
+        border-radius: 5px;
+        margin-bottom: 1rem;
+        display: none;
+    }
+    
+    .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 1rem;
+        border-radius: 5px;
+        margin-bottom: 1rem;
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 style="font-size: 2.5rem; margin-bottom: 1rem;">🔔 Price Alerts</h1>
+<p style="color: #666; margin-bottom: 2rem; font-size: 1.1rem;">
+    Get notified when cars matching your criteria are found or prices drop!
+</p>
+
+<div class="alerts-container">
+    <!-- Create Alert Form -->
+    <div class="create-alert-section">
+        <h2 class="section-title">Create New Alert</h2>
+        
+        <div id="success-msg" class="success-message"></div>
+        <div id="error-msg" class="error-message"></div>
+        
+        <form id="alert-form" onsubmit="createAlert(event)">
+            <div class="form-group">
+                <label for="email">Email Address *</label>
+                <input type="email" id="email" required placeholder="your@email.com">
+                <div class="form-help">We'll send notifications here</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="make">Make</label>
+                <input type="text" id="make" placeholder="e.g., Honda, Toyota">
+                <div class="form-help">Leave blank for any make</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="model">Model</label>
+                <input type="text" id="model" placeholder="e.g., Civic, Camry">
+                <div class="form-help">Leave blank for any model</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="min-year">Min Year</label>
+                <input type="number" id="min-year" placeholder="e.g., 2015">
+            </div>
+            
+            <div class="form-group">
+                <label for="max-year">Max Year</label>
+                <input type="number" id="max-year" placeholder="e.g., 2023">
+            </div>
+            
+            <div class="form-group">
+                <label for="max-price">Max Price *</label>
+                <input type="number" id="max-price" required placeholder="e.g., 20000">
+                <div class="form-help">Alert triggers when price is at or below this</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="max-mileage">Max Mileage</label>
+                <input type="number" id="max-mileage" placeholder="e.g., 100000">
+            </div>
+            
+            <button type="submit" class="btn" style="width: 100%;">🔔 Create Alert</button>
+        </form>
+    </div>
+    
+    <!-- My Alerts List -->
+    <div class="my-alerts-section">
+        <h2 class="section-title">My Alerts</h2>
+        
+        <div style="margin-bottom: 1rem;">
+            <input type="email" id="email-filter" placeholder="Enter your email to view alerts" 
+                   style="width: 70%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 5px;">
+            <button onclick="loadAlerts()" class="btn" style="width: 28%; margin-left: 2%;">Load</button>
+        </div>
+        
+        <div id="alerts-list">
+            <div class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <p>Enter your email above to view your alerts</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Info Section -->
+<div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+    <h3 style="margin-bottom: 1rem;">ℹ️ How Alerts Work</h3>
+    <ul style="line-height: 2;">
+        <li>🔍 Alerts check every day when the scraper runs (2 AM)</li>
+        <li>📧 You'll receive an email when matching cars are found</li>
+        <li>💰 Price drop alerts notify you of reduced prices</li>
+        <li>✅ You can have multiple active alerts</li>
+        <li>🗑️ Delete alerts you no longer need</li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function createAlert(event) {
+    event.preventDefault();
+    
+    const alertData = {
+        email: document.getElementById('email').value,
+        make: document.getElementById('make').value || null,
+        model: document.getElementById('model').value || null,
+        min_year: document.getElementById('min-year').value || null,
+        max_year: document.getElementById('max-year').value || null,
+        max_price: document.getElementById('max-price').value,
+        max_mileage: document.getElementById('max-mileage').value || null
+    };
+    
+    try {
+        const response = await fetch('/api/alerts', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(alertData)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            showSuccess('✅ Alert created successfully! You\'ll receive notifications when matching cars are found.');
+            document.getElementById('alert-form').reset();
+            
+            // Auto-load alerts if email filter matches
+            if (document.getElementById('email-filter').value === alertData.email) {
+                loadAlerts();
+            }
+        } else {
+            showError('❌ Error: ' + (result.error || 'Failed to create alert'));
+        }
+    } catch (error) {
+        console.error('Error creating alert:', error);
+        showError('❌ Failed to create alert. Please try again.');
+    }
+}
+
+async function loadAlerts() {
+    const email = document.getElementById('email-filter').value.trim();
+    
+    if (!email) {
+        showError('Please enter your email address');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/alerts?email=${encodeURIComponent(email)}`);
+        const data = await response.json();
+        
+        displayAlerts(data.alerts);
+    } catch (error) {
+        console.error('Error loading alerts:', error);
+        showError('Failed to load alerts');
+    }
+}
+
+function displayAlerts(alerts) {
+    const container = document.getElementById('alerts-list');
+    
+    if (alerts.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <p>No alerts found for this email</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = alerts.map(alert => {
+        const criteria = [];
+        if (alert.make) criteria.push(`<div class="alert-criterion"><strong>Make:</strong> ${alert.make}</div>`);
+        if (alert.model) criteria.push(`<div class="alert-criterion"><strong>Model:</strong> ${alert.model}</div>`);
+        if (alert.min_year) criteria.push(`<div class="alert-criterion"><strong>Min Year:</strong> ${alert.min_year}</div>`);
+        if (alert.max_year) criteria.push(`<div class="alert-criterion"><strong>Max Year:</strong> ${alert.max_year}</div>`);
+        if (alert.max_price) criteria.push(`<div class="alert-criterion"><strong>Max Price:</strong> $${parseFloat(alert.max_price).toLocaleString()}</div>`);
+        if (alert.max_mileage) criteria.push(`<div class="alert-criterion"><strong>Max Mileage:</strong> ${parseInt(alert.max_mileage).toLocaleString()} mi</div>`);
+        
+        const statusClass = alert.is_active ? 'active' : 'inactive';
+        const statusText = alert.is_active ? 'Active' : 'Inactive';
+        
+        const createdDate = new Date(alert.created_at).toLocaleDateString('en-US', {
+            year: 'numeric', month: 'short', day: 'numeric'
+        });
+        
+        return `
+            <div class="alert-card ${statusClass}">
+                <div class="alert-header">
+                    <div class="alert-title">
+                        ${alert.make || 'Any'} ${alert.model || 'Model'}
+                    </div>
+                    <span class="alert-status ${statusClass}">${statusText}</span>
+                </div>
+                <div class="alert-criteria">
+                    ${criteria.join('')}
+                </div>
+                <div style="font-size: 0.85rem; color: #888; margin-bottom: 1rem;">
+                    Created: ${createdDate}
+                </div>
+                <div class="alert-actions">
+                    ${alert.is_active ? 
+                        `<button onclick="toggleAlert(${alert.id}, false)" class="btn btn-small btn-secondary">⏸️ Pause</button>` :
+                        `<button onclick="toggleAlert(${alert.id}, true)" class="btn btn-small">▶️ Resume</button>`
+                    }
+                    <button onclick="deleteAlert(${alert.id})" class="btn btn-small btn-danger">🗑️ Delete</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function toggleAlert(alertId, activate) {
+    try {
+        const response = await fetch(`/api/alerts/${alertId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ is_active: activate })
+        });
+        
+        if (response.ok) {
+            showSuccess(`✅ Alert ${activate ? 'activated' : 'paused'}`);
+            loadAlerts();
+        } else {
+            showError('❌ Failed to update alert');
+        }
+    } catch (error) {
+        console.error('Error toggling alert:', error);
+        showError('❌ Failed to update alert');
+    }
+}
+
+async function deleteAlert(alertId) {
+    if (!confirm('Are you sure you want to delete this alert?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/alerts/${alertId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            showSuccess('✅ Alert deleted');
+            loadAlerts();
+        } else {
+            showError('❌ Failed to delete alert');
+        }
+    } catch (error) {
+        console.error('Error deleting alert:', error);
+        showError('❌ Failed to delete alert');
+    }
+}
+
+function showSuccess(message) {
+    const msg = document.getElementById('success-msg');
+    msg.textContent = message;
+    msg.style.display = 'block';
+    setTimeout(() => msg.style.display = 'none', 5000);
+}
+
+function showError(message) {
+    const msg = document.getElementById('error-msg');
+    msg.textContent = message;
+    msg.style.display = 'block';
+    setTimeout(() => msg.style.display = 'none', 5000);
+}
+</script>
+{% endblock %}
