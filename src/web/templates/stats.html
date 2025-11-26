@@ -1,0 +1,429 @@
+{% extends "base.html" %}
+
+{% block title %}Statistics - CarWatch{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    
+    .stats-header h1 {
+        font-size: 2.5rem;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stats-header p {
+        color: #666;
+        font-size: 1.1rem;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        text-align: center;
+        transition: transform 0.2s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        font-size: 1rem;
+        color: #666;
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 1px;
+    }
+    
+    .stat-sublabel {
+        font-size: 0.9rem;
+        color: #999;
+        margin-top: 0.5rem;
+    }
+    
+    .chart-section {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .chart-section h2 {
+        font-size: 1.8rem;
+        margin-bottom: 1.5rem;
+        color: #333;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 0.5rem;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 400px;
+    }
+    
+    .two-column-charts {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    @media (max-width: 968px) {
+        .two-column-charts {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .price-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .price-stat-box {
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 8px;
+        text-align: center;
+    }
+    
+    .price-stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .price-stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="stats-header">
+    <h1>📊 CarWatch Statistics</h1>
+    <p>Real-time insights into the used car market</p>
+</div>
+
+<div id="loading" style="text-align: center; padding: 3rem;">
+    <div class="spinner"></div>
+    <p>Loading statistics...</p>
+</div>
+
+<div id="stats-content" style="display: none;">
+    <!-- Quick Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">🚗</div>
+            <div class="stat-value" id="total-listings">0</div>
+            <div class="stat-label">Total Listings</div>
+            <div class="stat-sublabel" id="active-count"></div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-value" id="active-listings">0</div>
+            <div class="stat-label">Active Listings</div>
+            <div class="stat-sublabel" id="active-percent"></div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">📈</div>
+            <div class="stat-value" id="price-changes">0</div>
+            <div class="stat-label">Price Changes</div>
+            <div class="stat-sublabel">Tracked over time</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">📝</div>
+            <div class="stat-value" id="price-records">0</div>
+            <div class="stat-label">Price Records</div>
+            <div class="stat-sublabel">History entries</div>
+        </div>
+    </div>
+
+    <!-- Price Statistics -->
+    <div class="chart-section">
+        <h2>💰 Price Statistics</h2>
+        <div class="price-stats-grid">
+            <div class="price-stat-box">
+                <div class="price-stat-value" id="avg-price">$0</div>
+                <div class="price-stat-label">Average Price</div>
+            </div>
+            <div class="price-stat-box">
+                <div class="price-stat-value" id="median-price">$0</div>
+                <div class="price-stat-label">Median Price</div>
+            </div>
+            <div class="price-stat-box">
+                <div class="price-stat-value" id="min-price">$0</div>
+                <div class="price-stat-label">Lowest Price</div>
+            </div>
+            <div class="price-stat-box">
+                <div class="price-stat-value" id="max-price">$0</div>
+                <div class="price-stat-label">Highest Price</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="two-column-charts">
+        <!-- Top Makes Chart -->
+        <div class="chart-section">
+            <h2>🏭 Top Car Makes</h2>
+            <div class="chart-container">
+                <canvas id="makesChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Active vs Inactive Pie -->
+        <div class="chart-section">
+            <h2>📊 Listing Status</h2>
+            <div class="chart-container">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Price Distribution -->
+    <div class="chart-section">
+        <h2>💵 Price Distribution</h2>
+        <div class="chart-container">
+            <canvas id="priceDistChart"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+let makesChart, statusChart, priceDistChart;
+
+async function loadStats() {
+    try {
+        const response = await fetch('/api/stats');
+        const stats = await response.json();
+        
+        displayQuickStats(stats);
+        displayPriceStats(stats);
+        createMakesChart(stats.top_makes);
+        createStatusChart(stats);
+        await createPriceDistribution();
+        
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('stats-content').style.display = 'block';
+    } catch (error) {
+        console.error('Error loading stats:', error);
+        document.getElementById('loading').innerHTML = 
+            '<p style="color: red;">Error loading statistics. Please try again.</p>';
+    }
+}
+
+function displayQuickStats(stats) {
+    document.getElementById('total-listings').textContent = 
+        stats.total_listings.toLocaleString();
+    document.getElementById('active-listings').textContent = 
+        stats.active_listings.toLocaleString();
+    document.getElementById('price-changes').textContent = 
+        stats.listings_with_changes.toLocaleString();
+    document.getElementById('price-records').textContent = 
+        stats.price_records.toLocaleString();
+    
+    const activePercent = ((stats.active_listings / stats.total_listings) * 100).toFixed(1);
+    document.getElementById('active-percent').textContent = 
+        `${activePercent}% of total`;
+    document.getElementById('active-count').textContent = 
+        `${stats.active_listings} active / ${stats.inactive_listings} inactive`;
+}
+
+function displayPriceStats(stats) {
+    if (stats.avg_price) {
+        document.getElementById('avg-price').textContent = 
+            '$' + parseFloat(stats.avg_price).toLocaleString(undefined, {maximumFractionDigits: 0});
+    }
+    if (stats.median_price) {
+        document.getElementById('median-price').textContent = 
+            '$' + parseFloat(stats.median_price).toLocaleString(undefined, {maximumFractionDigits: 0});
+    }
+    if (stats.min_price) {
+        document.getElementById('min-price').textContent = 
+            '$' + parseFloat(stats.min_price).toLocaleString(undefined, {maximumFractionDigits: 0});
+    }
+    if (stats.max_price) {
+        document.getElementById('max-price').textContent = 
+            '$' + parseFloat(stats.max_price).toLocaleString(undefined, {maximumFractionDigits: 0});
+    }
+}
+
+function createMakesChart(topMakes) {
+    const ctx = document.getElementById('makesChart').getContext('2d');
+    
+    const labels = topMakes.map(m => m.make);
+    const data = topMakes.map(m => m.count);
+    
+    if (makesChart) makesChart.destroy();
+    
+    makesChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Number of Listings',
+                data: data,
+                backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                borderColor: '#667eea',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+}
+
+function createStatusChart(stats) {
+    const ctx = document.getElementById('statusChart').getContext('2d');
+    
+    if (statusChart) statusChart.destroy();
+    
+    statusChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Active', 'Inactive'],
+            datasets: [{
+                data: [stats.active_listings, stats.inactive_listings],
+                backgroundColor: [
+                    'rgba(40, 167, 69, 0.8)',
+                    'rgba(220, 53, 69, 0.8)'
+                ],
+                borderColor: ['#28a745', '#dc3545'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+async function createPriceDistribution() {
+    // Fetch all active listings prices
+    const response = await fetch('/api/listings?per_page=1000');
+    const data = await response.json();
+    
+    const prices = data.listings
+        .filter(l => l.price)
+        .map(l => parseFloat(l.price));
+    
+    if (prices.length === 0) return;
+    
+    // Create price buckets
+    const buckets = {
+        'Under $5K': 0,
+        '$5K-$10K': 0,
+        '$10K-$15K': 0,
+        '$15K-$20K': 0,
+        '$20K-$30K': 0,
+        '$30K-$50K': 0,
+        'Over $50K': 0
+    };
+    
+    prices.forEach(price => {
+        if (price < 5000) buckets['Under $5K']++;
+        else if (price < 10000) buckets['$5K-$10K']++;
+        else if (price < 15000) buckets['$10K-$15K']++;
+        else if (price < 20000) buckets['$15K-$20K']++;
+        else if (price < 30000) buckets['$20K-$30K']++;
+        else if (price < 50000) buckets['$30K-$50K']++;
+        else buckets['Over $50K']++;
+    });
+    
+    const ctx = document.getElementById('priceDistChart').getContext('2d');
+    
+    if (priceDistChart) priceDistChart.destroy();
+    
+    priceDistChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(buckets),
+            datasets: [{
+                label: 'Number of Listings',
+                data: Object.values(buckets),
+                backgroundColor: 'rgba(118, 75, 162, 0.8)',
+                borderColor: '#764ba2',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Load stats on page load
+loadStats();
+</script>
+{% endblock %}

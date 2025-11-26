@@ -12,7 +12,8 @@
 | 11/20/2025 | Added inactive listing detection, better error handling | 1.0 |
 | 11/25/2025 | Built Flask web interface, templates, API endpoints |5.0 |
 | 11/25/2025 | Built listing detail page with Chart.js price history | 3.0 |
-| **Total** | | **21.0** |
+| 11/25/2025 | Built stats dashboard with Chart.js visualizations | 2.5 |
+| **Total** | | **23.5** |
 
 ## Accomplishments
 
