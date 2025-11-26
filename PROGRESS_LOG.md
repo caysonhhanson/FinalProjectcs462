@@ -11,7 +11,8 @@
 | 11/20/2025 | Built scheduler with APScheduler, tested daily runs | 1.5 |
 | 11/20/2025 | Added inactive listing detection, better error handling | 1.0 |
 | 11/25/2025 | Built Flask web interface, templates, API endpoints |5.0 |
-| **Total** | | **18.0** |
+| 11/25/2025 | Built listing detail page with Chart.js price history | 3.0 |
+| **Total** | | **21.0** |
 
 ## Accomplishments
 

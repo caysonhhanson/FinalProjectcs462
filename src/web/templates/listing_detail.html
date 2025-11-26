@@ -1,0 +1,485 @@
+{% extends "base.html" %}
+
+{% block title %}Car Details - CarWatch{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-container {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    @media (max-width: 968px) {
+        .detail-container {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .main-info {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .sidebar-info {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .car-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 1rem;
+    }
+    
+    .current-price {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 1.5rem;
+    }
+    
+    .price-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-left: 1rem;
+    }
+    
+    .price-badge.decrease {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .price-badge.increase {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .detail-section {
+        margin-bottom: 2rem;
+    }
+    
+    .detail-section h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        color: #333;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 0.5rem;
+    }
+    
+    .specs-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .spec-item {
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 5px;
+    }
+    
+    .spec-label {
+        font-size: 0.85rem;
+        color: #666;
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    
+    .spec-value {
+        font-size: 1.25rem;
+        color: #333;
+        font-weight: 600;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 2rem;
+    }
+    
+    .metadata {
+        font-size: 0.9rem;
+        color: #666;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 5px;
+        margin-bottom: 1rem;
+    }
+    
+    .metadata-item {
+        margin-bottom: 0.5rem;
+    }
+    
+    .metadata-label {
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .btn-full {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .status-badge.active {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-badge.inactive {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .back-link {
+        display: inline-block;
+        margin-bottom: 1rem;
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    
+    .back-link:hover {
+        text-decoration: underline;
+    }
+    
+    .description-box {
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 5px;
+        line-height: 1.6;
+        color: #333;
+    }
+    
+    .no-data {
+        text-align: center;
+        padding: 3rem;
+        color: #666;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<a href="/" class="back-link">← Back to Search</a>
+
+<div id="loading" style="text-align: center; padding: 3rem;">
+    <div class="spinner"></div>
+    <p>Loading listing details...</p>
+</div>
+
+<div id="content" style="display: none;">
+    <div class="detail-container">
+        <!-- Main Info -->
+        <div class="main-info">
+            <div class="car-title" id="car-title"></div>
+            <div class="current-price" id="current-price"></div>
+            
+            <div class="detail-section">
+                <h2>📊 Price History</h2>
+                <div class="chart-container">
+                    <canvas id="priceChart"></canvas>
+                </div>
+                <div id="price-summary"></div>
+            </div>
+            
+            <div class="detail-section">
+                <h2>🚗 Specifications</h2>
+                <div class="specs-grid" id="specs-grid"></div>
+            </div>
+            
+            <div class="detail-section" id="description-section" style="display: none;">
+                <h2>📝 Description</h2>
+                <div class="description-box" id="description"></div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="sidebar-info">
+            <div class="action-buttons">
+                <a href="#" id="view-original" class="btn btn-full" target="_blank">View Original Listing</a>
+                <button class="btn btn-secondary btn-full" onclick="createAlert()">🔔 Create Price Alert</button>
+            </div>
+            
+            <div class="detail-section">
+                <h2>ℹ️ Listing Info</h2>
+                <div class="metadata" id="metadata"></div>
+            </div>
+            
+            <div class="detail-section">
+                <h2>📍 Location</h2>
+                <div class="metadata">
+                    <div id="location"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="error" style="display: none;" class="no-data">
+    <h2>🚫 Listing Not Found</h2>
+    <p>The listing you're looking for doesn't exist or has been removed.</p>
+    <a href="/" class="btn">Back to Search</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const listingId = {{ listing_id }};
+let priceChart = null;
+
+async function loadListingDetails() {
+    try {
+        const response = await fetch(`/api/listing/${listingId}`);
+        
+        if (!response.ok) {
+            throw new Error('Listing not found');
+        }
+        
+        const data = await response.json();
+        displayListing(data.listing, data.price_history);
+        
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+    } catch (error) {
+        console.error('Error loading listing:', error);
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('error').style.display = 'block';
+    }
+}
+
+function displayListing(listing, priceHistory) {
+    // Title
+    document.getElementById('car-title').textContent = listing.title;
+    
+    // Current Price with badge
+    const priceDiv = document.getElementById('current-price');
+    let priceHTML = listing.price ? `$${parseFloat(listing.price).toLocaleString()}` : 'Price N/A';
+    
+    // Add price change badge if there's history
+    if (priceHistory.length > 1) {
+        const firstPrice = parseFloat(priceHistory[0].price);
+        const currentPrice = parseFloat(listing.price);
+        const priceDiff = currentPrice - firstPrice;
+        const percentChange = ((priceDiff / firstPrice) * 100).toFixed(1);
+        
+        if (priceDiff !== 0) {
+            const badgeClass = priceDiff < 0 ? 'decrease' : 'increase';
+            const arrow = priceDiff < 0 ? '↓' : '↑';
+            priceHTML += `<span class="price-badge ${badgeClass}">${arrow} $${Math.abs(priceDiff).toLocaleString()} (${Math.abs(percentChange)}%)</span>`;
+        }
+    }
+    
+    priceDiv.innerHTML = priceHTML;
+    
+    // Specifications
+    const specsGrid = document.getElementById('specs-grid');
+    const specs = [
+        { label: 'Year', value: listing.year || 'N/A', icon: '📅' },
+        { label: 'Make', value: listing.make || 'N/A', icon: '🏭' },
+        { label: 'Model', value: listing.model || 'N/A', icon: '🚗' },
+        { label: 'Mileage', value: listing.mileage ? `${parseInt(listing.mileage).toLocaleString()} mi` : 'N/A', icon: '🛣️' }
+    ];
+    
+    specsGrid.innerHTML = specs.map(spec => `
+        <div class="spec-item">
+            <div class="spec-label">${spec.icon} ${spec.label}</div>
+            <div class="spec-value">${spec.value}</div>
+        </div>
+    `).join('');
+    
+    // Description
+    if (listing.description && listing.description.trim()) {
+        document.getElementById('description-section').style.display = 'block';
+        document.getElementById('description').textContent = listing.description;
+    }
+    
+    // Metadata
+    const metadataDiv = document.getElementById('metadata');
+    const firstSeen = new Date(listing.first_seen).toLocaleDateString('en-US', { 
+        year: 'numeric', month: 'long', day: 'numeric' 
+    });
+    const lastSeen = new Date(listing.last_seen).toLocaleDateString('en-US', { 
+        year: 'numeric', month: 'long', day: 'numeric' 
+    });
+    
+    const statusBadge = listing.is_active 
+        ? '<span class="status-badge active">✓ Active</span>'
+        : '<span class="status-badge inactive">✗ Inactive</span>';
+    
+    metadataDiv.innerHTML = `
+        <div class="metadata-item">
+            <span class="metadata-label">Status:</span> ${statusBadge}
+        </div>
+        <div class="metadata-item">
+            <span class="metadata-label">First Seen:</span> ${firstSeen}
+        </div>
+        <div class="metadata-item">
+            <span class="metadata-label">Last Updated:</span> ${lastSeen}
+        </div>
+        <div class="metadata-item">
+            <span class="metadata-label">Source:</span> ${listing.source.toUpperCase()}
+        </div>
+        <div class="metadata-item">
+            <span class="metadata-label">Listing ID:</span> ${listing.external_id}
+        </div>
+    `;
+    
+    // Location
+    document.getElementById('location').innerHTML = `
+        <strong>📍 ${listing.location || 'Location not specified'}</strong>
+    `;
+    
+    // Original listing link
+    document.getElementById('view-original').href = listing.url;
+    
+    // Price History Chart
+    if (priceHistory.length > 0) {
+        createPriceChart(priceHistory);
+        displayPriceSummary(priceHistory);
+    } else {
+        document.querySelector('.chart-container').innerHTML = 
+            '<p style="text-align: center; color: #666; padding: 2rem;">No price history available yet.</p>';
+    }
+}
+
+function createPriceChart(priceHistory) {
+    const ctx = document.getElementById('priceChart').getContext('2d');
+    
+    const labels = priceHistory.map(record => {
+        const date = new Date(record.recorded_at);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    });
+    
+    const prices = priceHistory.map(record => parseFloat(record.price));
+    
+    // Destroy existing chart if it exists
+    if (priceChart) {
+        priceChart.destroy();
+    }
+    
+    priceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Price',
+                data: prices,
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                pointBackgroundColor: '#667eea',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return '$' + context.parsed.y.toLocaleString();
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function displayPriceSummary(priceHistory) {
+    const summaryDiv = document.getElementById('price-summary');
+    
+    if (priceHistory.length < 2) {
+        summaryDiv.innerHTML = '<p style="color: #666; font-style: italic;">Price has not changed since listing was first seen.</p>';
+        return;
+    }
+    
+    const prices = priceHistory.map(r => parseFloat(r.price));
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    const firstPrice = prices[0];
+    const currentPrice = prices[prices.length - 1];
+    const totalChange = currentPrice - firstPrice;
+    const percentChange = ((totalChange / firstPrice) * 100).toFixed(1);
+    
+    const changeText = totalChange < 0 ? 'decreased' : 'increased';
+    const changeColor = totalChange < 0 ? '#155724' : '#721c24';
+    
+    summaryDiv.innerHTML = `
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 5px;">
+            <div>
+                <div style="font-size: 0.85rem; color: #666;">Lowest Price</div>
+                <div style="font-size: 1.25rem; font-weight: 600; color: #28a745;">$${minPrice.toLocaleString()}</div>
+            </div>
+            <div>
+                <div style="font-size: 0.85rem; color: #666;">Highest Price</div>
+                <div style="font-size: 1.25rem; font-weight: 600; color: #dc3545;">$${maxPrice.toLocaleString()}</div>
+            </div>
+            <div>
+                <div style="font-size: 0.85rem; color: #666;">Total Change</div>
+                <div style="font-size: 1.25rem; font-weight: 600; color: ${changeColor};">
+                    ${totalChange < 0 ? '-' : '+'}$${Math.abs(totalChange).toLocaleString()} (${percentChange}%)
+                </div>
+            </div>
+            <div>
+                <div style="font-size: 0.85rem; color: #666;">Price Updates</div>
+                <div style="font-size: 1.25rem; font-weight: 600; color: #667eea;">${priceHistory.length}</div>
+            </div>
+        </div>
+    `;
+}
+
+function createAlert() {
+    alert('Alert system coming soon! This will allow you to get notified when the price drops.');
+    // TODO: Implement alert creation
+}
+
+// Load listing details on page load
+loadListingDetails();
+</script>
+{% endblock %}
