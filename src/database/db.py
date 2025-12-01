@@ -39,7 +39,9 @@ class Database:
             with self.conn.cursor(row_factory=dict_row) as cur:
                 cur.execute(query, params)
                 if fetch:
-                    return cur.fetchall()
+                    result = cur.fetchall()
+                    self.conn.commit()  # ✅ COMMIT BEFORE RETURNING!
+                    return result
                 self.conn.commit()
                 return cur.rowcount
         except Exception as e:
