@@ -251,6 +251,18 @@ def manage_alerts():
         if not data.get('email') or not data.get('max_price'):
             return jsonify({'error': 'Email and max_price are required'}), 400
         
+
+        alert_data = {
+            'email': data.get('email'),
+            'make': data.get('make') or None,
+            'model': data.get('model') or None,
+            'min_year': data.get('min_year') or None,
+            'max_year': data.get('max_year') or None,
+            'max_price': data.get('max_price'),
+            'max_mileage': data.get('max_mileage') or None
+        }
+
+
         query = """
             INSERT INTO alerts (
                 email, make, model, min_year, max_year, max_price, max_mileage
@@ -262,7 +274,7 @@ def manage_alerts():
         """
         
         try:
-            result = db.execute_query(query, data, fetch=True)
+            result = db.execute_query(query, alert_data, fetch=True)
             db.close()
             return jsonify({'id': result[0]['id'], 'message': 'Alert created'}), 201
         except Exception as e:
