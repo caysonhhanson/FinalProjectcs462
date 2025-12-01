@@ -6,6 +6,15 @@ import os
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
 
+if os.getenv('RENDER'):
+    app.config['DEBUG'] = False
+else:
+    app.config['DEBUG'] = True
+
+def get_db():
+    """Get database connection"""
+    return Database()
+
 def get_db():
     """Get database connection"""
     return Database()

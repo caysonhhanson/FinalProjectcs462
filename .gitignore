@@ -8,11 +8,7 @@ venv/
 env/
 ENV/
 
-# Database
-*.db
-*.sqlite
-
-# Environment
+# Environment variables
 .env
 
 # IDE
@@ -21,6 +17,18 @@ ENV/
 *.swp
 *.swo
 
+# Logs
+logs/
+*.log
+
+# Database
+*.db
+*.sqlite
+
 # OS
 .DS_Store
 Thumbs.db
+
+# Test files
+ksl_*.html
+craigslist_*.html

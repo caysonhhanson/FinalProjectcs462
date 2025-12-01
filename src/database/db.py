@@ -14,13 +14,21 @@ class Database:
     def connect(self):
         """Connect to PostgreSQL database"""
         try:
-            conninfo = f"host={os.getenv('DB_HOST', 'localhost')} " \
-                      f"dbname={os.getenv('DB_NAME', 'carwatch')} " \
-                      f"user={os.getenv('DB_USER', os.getenv('USER'))} " \
-                      f"password={os.getenv('DB_PASSWORD', '')} " \
-                      f"port={os.getenv('DB_PORT', '5432')}"
+            # Check if we're on Render (uses DATABASE_URL)
+            database_url = os.getenv('DATABASE_URL')
             
-            self.conn = psycopg.connect(conninfo)
+            if database_url:
+                # Production (Render)
+                self.conn = psycopg.connect(database_url)
+            else:
+                # Local development
+                conninfo = f"host={os.getenv('DB_HOST', 'localhost')} " \
+                          f"dbname={os.getenv('DB_NAME', 'carwatch')} " \
+                          f"user={os.getenv('DB_USER', os.getenv('USER'))} " \
+                          f"password={os.getenv('DB_PASSWORD', '')} " \
+                          f"port={os.getenv('DB_PORT', '5432')}"
+                
+                self.conn = psycopg.connect(conninfo)
         except Exception as e:
             print(f"❌ Database connection failed: {e}")
             raise
